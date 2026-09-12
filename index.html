@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La conduite des voix — Guide interactif</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/abcjs/6.5.2/abcjs-basic-min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/abcjs/6.5.2/abcjs-audio.css">
+<style>
+  :root{
+    --board:#1e3a34;
+    --board-dark:#16302b;
+    --board-line:rgba(242,239,227,0.14);
+    --chalk:#f2efe3;
+    --chalk-dim:#b9c9c0;
+    --gold:#e3b660;
+    --paper:#faf6ec;
+    --paper-line:#e3dcc9;
+    --ink:#2b2620;
+    --ink-dim:#6b6255;
+
+    --soprano:#f2a154;
+    --alto:#7fb3c9;
+    --tenor:#c98fd6;
+    --basse:#d97a9c;
+
+    --ok:#4f8f6d;
+    --warn:#b8863a;
+    --err:#c0524a;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--board);
+    color:var(--chalk);
+    font-family:'Work Sans', sans-serif;
+    line-height:1.55;
+  }
+  h1,h2,h3{
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    margin:0 0 0.4em 0;
+  }
+  a{color:var(--gold);}
+  .wrap{max-width:920px;margin:0 auto;padding:0 24px;}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    padding:64px 0 48px 0;
+    border-bottom:1px solid var(--board-line);
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 38px,
+        var(--board-line) 38px,
+        var(--board-line) 39px
+      );
+    background-size: 100% 190px;
+    background-repeat: repeat-y;
+  }
+  .hero-inner{background:linear-gradient(180deg, var(--board) 55%, transparent);}
+  .kicker{
+    color:var(--gold);
+    font-size:0.95rem;
+    font-weight:600;
+    letter-spacing:0.02em;
+    margin-bottom:14px;
+  }
+  h1{
+    font-size:2.6rem;
+    color:var(--chalk);
+    max-width:14ch;
+  }
+  .hero p{
+    max-width:56ch;
+    color:var(--chalk-dim);
+    font-size:1.08rem;
+  }
+
+  /* ---------- RULES SECTION ---------- */
+  .rules{padding:52px 0 40px 0;}
+  .rules h2{color:var(--chalk); font-size:1.6rem;}
+  .rules > p{color:var(--chalk-dim); max-width:58ch; margin-bottom:32px;}
+  .rule-row{
+    display:grid;
+    grid-template-columns: 34px 1fr;
+    gap:18px;
+    padding:20px 0;
+    border-top:1px solid var(--board-line);
+  }
+  .rule-row:last-child{border-bottom:1px solid var(--board-line);}
+  .rule-mark{
+    width:34px; height:34px;
+    border-radius:50%;
+    border:1.5px solid var(--gold);
+    color:var(--gold);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    flex-shrink:0;
+  }
+  .rule-row h3{color:var(--chalk); font-size:1.08rem; margin-bottom:4px;}
+  .rule-row p{color:var(--chalk-dim); margin:0; font-size:0.98rem; max-width:62ch;}
+
+  .rule-visual{
+    background:var(--paper);
+    border-radius:6px;
+    padding:12px 14px 14px 14px;
+    margin-top:14px;
+    max-width:520px;
+    overflow-x:auto;
+  }
+  .rule-visual > div[id$="-notation"]{min-height:100px;}
+
+  /* ---------- TOOL (paper card) ---------- */
+  .tool-section{padding:56px 0 72px 0;}
+  .paper{
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:6px;
+    padding:36px 40px 40px 40px;
+    box-shadow:0 24px 60px rgba(0,0,0,0.35);
+  }
+  .paper h2{color:var(--ink); font-size:1.55rem;}
+  .paper > p.lede{color:var(--ink-dim); max-width:60ch; margin-bottom:28px; font-size:1rem;}
+
+  .preset-row{
+    display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+    margin-bottom:28px;
+    padding-bottom:24px;
+    border-bottom:1px dashed var(--paper-line);
+  }
+  .preset-row label{font-weight:600; font-size:0.92rem;}
+  select{
+    font-family:'Work Sans', sans-serif;
+    font-size:0.95rem;
+    padding:8px 12px;
+    border-radius:5px;
+    border:1px solid var(--paper-line);
+    background:#fff;
+    color:var(--ink);
+  }
+
+  .chords-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:28px;
+    margin-bottom:8px;
+  }
+  @media (max-width: 640px){
+    .chords-grid{grid-template-columns:1fr;}
+  }
+  .chord-box{
+    background:#fff;
+    border:1px solid var(--paper-line);
+    border-radius:6px;
+    padding:18px 20px 20px 20px;
+  }
+  .chord-box h3{
+    font-size:0.95rem;
+    text-transform:none;
+    color:var(--ink-dim);
+    margin-bottom:14px;
+    font-family:'Work Sans', sans-serif;
+    font-weight:600;
+  }
+  .voice-field{
+    display:grid;
+    grid-template-columns: 90px 1fr auto;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .voice-field:last-child{margin-bottom:0;}
+  .voice-dot{
+    width:10px;height:10px;border-radius:50%;
+    display:inline-block; margin-right:8px;
+    flex-shrink:0;
+  }
+  .voice-name{font-size:0.92rem; font-weight:500; display:flex; align-items:center;}
+  .voice-field input[type=text]{
+    font-family:'Work Sans', sans-serif;
+    font-size:0.95rem;
+    padding:7px 10px;
+    border-radius:5px;
+    border:1px solid var(--paper-line);
+    width:100%;
+  }
+  .sensible-toggle{
+    display:flex; align-items:center; gap:5px;
+    font-size:0.78rem;
+    color:var(--ink-dim);
+    white-space:nowrap;
+  }
+  .sensible-toggle input{margin:0;}
+
+  .format-note{
+    font-size:0.85rem;
+    color:var(--ink-dim);
+    margin:14px 0 26px 0;
+  }
+
+  .verify-btn{
+    font-family:'Work Sans', sans-serif;
+    font-weight:600;
+    font-size:1rem;
+    background:var(--board);
+    color:var(--chalk);
+    border:none;
+    padding:13px 28px;
+    border-radius:5px;
+    cursor:pointer;
+    transition:background 0.15s ease;
+  }
+  .verify-btn:hover{background:var(--board-dark);}
+
+  /* ---------- RESULTS ---------- */
+  .results{margin-top:32px;}
+  .results-list{list-style:none; margin:0 0 28px 0; padding:0;}
+  .results-list li{
+    display:grid;
+    grid-template-columns: 22px 1fr;
+    gap:10px;
+    padding:11px 0;
+    border-top:1px solid var(--paper-line);
+    font-size:0.95rem;
+  }
+  .results-list li:last-child{border-bottom:1px solid var(--paper-line);}
+  .badge{font-weight:700; text-align:center;}
+  .badge.error{color:var(--err);}
+  .badge.warn{color:var(--warn);}
+  .badge.ok{color:var(--ok);}
+  .success-msg{
+    padding:14px 16px;
+    background:#eef6ee;
+    border:1px solid #cfe6cf;
+    border-radius:6px;
+    color:var(--ok);
+    font-weight:600;
+  }
+
+  /* ---------- NOTATION + PIANO ---------- */
+  .visuals{
+    margin-top:28px;
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+  }
+  .visual-block{
+    border:1px solid var(--paper-line);
+    border-radius:6px;
+    padding:14px 16px 16px 16px;
+    background:#fff;
+    overflow-x:auto;
+  }
+  .visual-block h4{
+    margin:0 0 8px 0;
+    font-size:0.82rem;
+    font-weight:600;
+    color:var(--ink-dim);
+    font-family:'Work Sans', sans-serif;
+  }
+  #notation{min-height:150px;}
+  .abc-audio{margin-top:6px;}
+  .abc-audio .audio-note{font-size:0.78rem; color:var(--ink-dim); font-style:italic;}
+  .piano-vertical-wrap{display:flex; justify-content:flex-start; margin-top:6px;}
+  .piano-vertical-wrap svg{max-width:100%; height:auto;}
+
+  .legend{
+    display:flex; gap:18px; flex-wrap:wrap;
+    font-size:0.82rem; color:var(--ink-dim);
+    margin-top:14px;
+  }
+  .legend span{display:flex; align-items:center; gap:6px;}
+  .legend .voice-dot{width:9px;height:9px;}
+
+  footer{
+    padding:30px 0 50px 0;
+    color:var(--chalk-dim);
+    font-size:0.85rem;
+    border-top:1px solid var(--board-line);
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap hero-inner">
+    <div class="kicker">Harmonie &amp; écriture à quatre voix</div>
+    <h1>La conduite des voix,<br>expliquée et vérifiée</h1>
+    <p>Un aide-mémoire des règles essentielles du voice leading (SATB), et un correcteur interactif qui affiche vos accords en partition et sur un clavier de piano.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="rules">
+    <h2>Les règles à connaître</h2>
+    <p>Ces règles s'appliquent à l'écriture à quatre voix (Soprano, Alto, Ténor, Basse). L'outil ci-dessous vérifie automatiquement les six premières sur les accords que vous entrez.</p>
+
+    <div class="rule-row">
+      <div class="rule-mark">1</div>
+      <div>
+        <h3>Pas de quintes ni d'octaves parallèles</h3>
+        <p>Si deux voix forment une quinte juste (ou une octave/unisson) puis se déplacent dans la même direction en gardant ce même intervalle, l'oreille perd l'indépendance des deux voix. C'est l'erreur la plus surveillée en écriture classique.</p>
+        <div class="rule-visual">
+          <div id="rule1-notation"></div>
+          <div id="rule1-audio" class="abc-audio"></div>
+          <div id="rule1-piano" class="piano-vertical-wrap"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rule-row">
+      <div class="rule-mark">2</div>
+      <div>
+        <h3>Attention aux quintes et octaves directes (cachées)</h3>
+        <p>Même sans intervalle parallèle préalable, arriver ensemble sur une quinte ou une octave par mouvement direct (les deux voix montent ou descendent ensemble), avec un saut à la voix supérieure, reste déconseillé — surtout entre Soprano et Basse.</p>
+        <div class="rule-visual">
+          <div id="rule2-notation"></div>
+          <div id="rule2-audio" class="abc-audio"></div>
+          <div id="rule2-piano" class="piano-vertical-wrap"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rule-row">
+      <div class="rule-mark">3</div>
+      <div>
+        <h3>Pas de croisement de voix</h3>
+        <p>Chaque voix doit rester à sa place dans la texture : la Soprano toujours au-dessus de l'Alto, l'Alto au-dessus du Ténor, le Ténor au-dessus de la Basse.</p>
+        <div class="rule-visual">
+          <div id="rule3-notation"></div>
+          <div id="rule3-audio" class="abc-audio"></div>
+          <div id="rule3-piano" class="piano-vertical-wrap"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rule-row">
+      <div class="rule-mark">4</div>
+      <div>
+        <h3>Éviter le chevauchement</h3>
+        <p>Une voix ne devrait pas se déplacer au-delà de la position que la voix voisine occupait à l'accord précédent — même sans croisement au même instant.</p>
+        <div class="rule-visual">
+          <div id="rule4-notation"></div>
+          <div id="rule4-audio" class="abc-audio"></div>
+          <div id="rule4-piano" class="piano-vertical-wrap"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rule-row">
+      <div class="rule-mark">5</div>
+      <div>
+        <h3>Un espacement raisonnable</h3>
+        <p>Entre Soprano et Alto, puis entre Alto et Ténor, l'écart ne devrait pas dépasser une octave. La Basse, elle, peut s'éloigner davantage du Ténor.</p>
+        <div class="rule-visual">
+          <div id="rule5-notation"></div>
+          <div id="rule5-audio" class="abc-audio"></div>
+          <div id="rule5-piano" class="piano-vertical-wrap"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rule-row">
+      <div class="rule-mark">6</div>
+      <div>
+        <h3>Résoudre la sensible</h3>
+        <p>La sensible (7e degré) attire l'oreille vers la tonique : elle monte presque toujours d'un demi-ton, et n'est en principe chantée que par une seule voix à la fois.</p>
+        <div class="rule-visual">
+          <div id="rule6-notation"></div>
+          <div id="rule6-audio" class="abc-audio"></div>
+          <div id="rule6-piano" class="piano-vertical-wrap"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rule-row">
+      <div class="rule-mark">7</div>
+      <div>
+        <h3>Préférer le mouvement contraire ou oblique</h3>
+        <p>Quand deux voix se déplacent dans des directions opposées (ou qu'une reste immobile), l'indépendance des voix est naturellement préservée — c'est souvent la solution la plus sûre.</p>
+        <div class="rule-visual">
+          <div id="rule7-notation"></div>
+          <div id="rule7-audio" class="abc-audio"></div>
+          <div id="rule7-piano" class="piano-vertical-wrap"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tool-section">
+    <div class="paper">
+      <h2>Le correcteur de conduite des voix</h2>
+      <p class="lede">Entrez deux accords en notation SATB (une note par voix) et vérifiez l'enchaînement. Le résultat s'affiche en texte, en partition et sur un clavier de piano.</p>
+
+      <div class="preset-row">
+        <label for="preset">Charger un exemple :</label>
+        <select id="preset"></select>
+      </div>
+
+      <div class="chords-grid">
+        <div class="chord-box">
+          <h3>Accord 1</h3>
+          <div id="chord1-fields"></div>
+        </div>
+        <div class="chord-box">
+          <h3>Accord 2</h3>
+          <div id="chord2-fields"></div>
+        </div>
+      </div>
+
+      <p class="format-note">
+        Format des notes : nom de note + altération éventuelle (# ou b) + numéro d'octave — par ex. <strong>Do4</strong>, <strong>Fa#3</strong>, <strong>Sib4</strong>, ou en notation anglo-saxonne <strong>C4</strong>, <strong>F#3</strong>, <strong>Bb4</strong>. Do4 correspond au Do central.
+        Cochez « sensible » sur une voix si elle chante le 7e degré à l'accord 1, pour vérifier sa résolution.
+      </p>
+
+      <button class="verify-btn" id="verify-btn">Vérifier l'enchaînement</button>
+
+      <div class="results" id="results" style="display:none;">
+        <ul class="results-list" id="results-list"></ul>
+
+        <div class="visuals">
+          <div class="visual-block">
+            <h4>Partition</h4>
+            <div id="notation"></div>
+            <div id="notation-audio" class="abc-audio"></div>
+          </div>
+          <div class="visual-block">
+            <h4>Clavier de piano — Accord 1 → Accord 2</h4>
+            <div id="piano-vertical" class="piano-vertical-wrap"></div>
+          </div>
+        </div>
+
+        <div class="legend">
+          <span><i class="voice-dot" style="background:var(--soprano)"></i>Soprano</span>
+          <span><i class="voice-dot" style="background:var(--alto)"></i>Alto</span>
+          <span><i class="voice-dot" style="background:var(--tenor)"></i>Ténor</span>
+          <span><i class="voice-dot" style="background:var(--basse)"></i>Basse</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    Outil pédagogique libre d'usage pour vos élèves — écriture à quatre voix, harmonie tonale.
+  </div>
+</footer>
+
+<script src="clavier-voice-leading.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  const VOICES = ['S','A','T','B'];
+  const NAMES = { S:'Soprano', A:'Alto', T:'Ténor', B:'Basse' };
+  const COLORS = { S:'#f2a154', A:'#7fb3c9', T:'#c98fd6', B:'#d97a9c' };
+
+  // ---------- Note parsing ----------
+  // Returns { letter: 'C'..'B', accOffset: int, octave: int, midi: int } or null
+  function parseNote(raw){
+    if (!raw) return null;
+    const s = raw.trim().toLowerCase().replace(/\s+/g,'');
+    const fr = { 'do':'c','ré':'d','re':'d','mi':'e','fa':'f','sol':'g','la':'a','si':'b' };
+    const m = s.match(/^(do|ré|re|mi|fa|sol|la|si|[a-g])([#b]{0,2})(-?\d)$/i);
+    if (!m) return null;
+    let letter = m[1].toLowerCase();
+    if (fr[letter]) letter = fr[letter];
+    const acc = m[2];
+    const octave = parseInt(m[3], 10);
+    const base = { c:0,d:2,e:4,f:5,g:7,a:9,b:11 }[letter];
+    if (base === undefined) return null;
+    let accOffset = 0;
+    for (const ch of acc) accOffset += (ch === '#' ? 1 : -1);
+    const midi = (octave + 1) * 12 + base + accOffset;
+    return { letter: letter.toUpperCase(), accOffset, octave, midi };
+  }
+
+  function toAbcPitch(note){
+    const accStr = note.accOffset > 0 ? '^'.repeat(note.accOffset)
+                  : note.accOffset < 0 ? '_'.repeat(-note.accOffset)
+                  : '';
+    let letterOut, marks;
+    if (note.octave >= 4){
+      letterOut = note.letter.toLowerCase();
+      marks = "'".repeat(note.octave - 4);
+    } else {
+      letterOut = note.letter.toUpperCase();
+      marks = ','.repeat(3 - note.octave);
+    }
+    return accStr + letterOut + marks;
+  }
+
+  // ---------- Rule checking ----------
+  const PAIRS = [['S','A'],['S','T'],['S','B'],['A','T'],['A','B'],['T','B']];
+  const ADJACENT = [['S','A'],['A','T'],['T','B']];
+  function isPerfect(m){ return m === 0 || m === 7; }
+  function mod12(n){ return ((n % 12) + 12) % 12; }
+  function sign(n){ return n > 0 ? 1 : (n < 0 ? -1 : 0); }
+
+  function analyze(midi1, midi2, sensible){
+    const issues = [];
+
+    function checkCrossing(midi, label){
+      if (midi.S < midi.A) issues.push({ type:'error', text:`Croisement (${label}) : la Soprano est plus basse que l'Alto.` });
+      if (midi.A < midi.T) issues.push({ type:'error', text:`Croisement (${label}) : l'Alto est plus basse que le Ténor.` });
+      if (midi.T < midi.B) issues.push({ type:'error', text:`Croisement (${label}) : le Ténor est plus bas que la Basse.` });
+    }
+    checkCrossing(midi1, 'accord 1');
+    checkCrossing(midi2, 'accord 2');
+
+    function checkSpacing(midi, label){
+      if (midi.S - midi.A > 12) issues.push({ type:'warn', text:`Espacement (${label}) : plus d'une octave entre Soprano et Alto.` });
+      if (midi.A - midi.T > 12) issues.push({ type:'warn', text:`Espacement (${label}) : plus d'une octave entre Alto et Ténor.` });
+    }
+    checkSpacing(midi1, 'accord 1');
+    checkSpacing(midi2, 'accord 2');
+
+    for (const [v1, v2] of PAIRS){
+      const i1 = midi1[v1] - midi1[v2];
+      const i2 = midi2[v1] - midi2[v2];
+      const m1 = mod12(i1), m2 = mod12(i2);
+      const dir1 = sign(midi2[v1] - midi1[v1]);
+      const dir2 = sign(midi2[v2] - midi1[v2]);
+      if (isPerfect(m1) && isPerfect(m2) && m1 === m2 && dir1 !== 0 && dir1 === dir2){
+        const kind = m1 === 0 ? 'octaves' : 'quintes';
+        issues.push({ type:'error', text:`Quintes/octaves parallèles : ${kind} parallèles entre ${NAMES[v1]} et ${NAMES[v2]}.` });
+      } else if (v1 === 'S' && v2 === 'B' && isPerfect(m2) && !(isPerfect(m1) && m1 === m2) && dir1 !== 0 && dir1 === dir2 && Math.abs(midi2.S - midi1.S) > 2){
+        const kind = m2 === 0 ? 'octave' : 'quinte';
+        issues.push({ type:'warn', text:`Quinte/octave directe (cachée) : ${kind} directe entre Soprano et Basse (saut au soprano).` });
+      }
+    }
+
+    function checkOverlap(vHigh, vLow, label){
+      if (midi2[vLow] > midi1[vHigh]) issues.push({ type:'error', text:`Chevauchement : ${NAMES[vLow]} dépasse la position précédente de ${NAMES[vHigh]} (${label}).` });
+      if (midi2[vHigh] < midi1[vLow]) issues.push({ type:'error', text:`Chevauchement : ${NAMES[vHigh]} descend sous la position précédente de ${NAMES[vLow]} (${label}).` });
+    }
+    for (const [vHigh, vLow] of ADJACENT) checkOverlap(vHigh, vLow, `${NAMES[vHigh]}/${NAMES[vLow]}`);
+
+    for (const v of VOICES){
+      const leap = Math.abs(midi2[v] - midi1[v]);
+      if (leap > 12) issues.push({ type:'warn', text:`Grand saut dans la voix ${NAMES[v]} (plus d'une octave).` });
+    }
+
+    if (sensible){
+      const flagged = VOICES.filter(v => sensible[v]);
+      for (const v of flagged){
+        if (midi2[v] - midi1[v] !== 1){
+          issues.push({ type:'error', text:`La sensible (${NAMES[v]}) ne monte pas vers la tonique par demi-ton.` });
+        }
+      }
+      if (flagged.length > 1){
+        issues.push({ type:'error', text:`Sensible doublée : une seule voix devrait chanter la sensible.` });
+      }
+    }
+
+    return issues;
+  }
+
+  // ---------- Presets ----------
+  const PRESETS = [
+    { name: "— Choisir un exemple —", c1:{S:'',A:'',T:'',B:''}, c2:{S:'',A:'',T:'',B:''}, sensible:{} },
+    { name: "1. Quintes parallèles (à éviter)", c1:{S:'D5',A:'G4',T:'B3',B:'G3'}, c2:{S:'E5',A:'A4',T:'B3',B:'F#3'}, sensible:{} },
+    { name: "2. Octaves parallèles (à éviter)", c1:{S:'C5',A:'G4',T:'E4',B:'C4'}, c2:{S:'D5',A:'F4',T:'E4',B:'D4'}, sensible:{} },
+    { name: "3. Quinte directe / cachée", c1:{S:'G4',A:'D4',T:'A#3',B:'D3'}, c2:{S:'D5',A:'D4',T:'A#3',B:'G3'}, sensible:{} },
+    { name: "4. Croisement de voix (à éviter)", c1:{S:'G4',A:'D4',T:'A#3',B:'D3'}, c2:{S:'F4',A:'A4',T:'A#3',B:'D3'}, sensible:{} },
+    { name: "5. Chevauchement (sans croisement)", c1:{S:'C5',A:'G4',T:'D4',B:'C3'}, c2:{S:'D5',A:'C#5',T:'D4',B:'C3'}, sensible:{} },
+    { name: "6. Bon exemple (mouvement contraire)", c1:{S:'C5',A:'G4',T:'E4',B:'C3'}, c2:{S:'B4',A:'G4',T:'D4',B:'G3'}, sensible:{} },
+    { name: "7. Sensible mal résolue", c1:{S:'C5',A:'G4',T:'B3',B:'G2'}, c2:{S:'C5',A:'G4',T:'A3',B:'C3'}, sensible:{T:true} }
+  ];
+
+  // ---------- Build inputs ----------
+  function buildChordFields(containerId, chordKey){
+    const container = document.getElementById(containerId);
+    VOICES.forEach(v => {
+      const row = document.createElement('div');
+      row.className = 'voice-field';
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'voice-name';
+      const dot = document.createElement('i');
+      dot.className = 'voice-dot';
+      dot.style.background = COLORS[v];
+      nameSpan.appendChild(dot);
+      nameSpan.appendChild(document.createTextNode(NAMES[v]));
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.id = `${chordKey}-${v}`;
+      input.placeholder = 'ex. Do4';
+      input.autocomplete = 'off';
+
+      row.appendChild(nameSpan);
+      row.appendChild(input);
+
+      if (chordKey === 'c1'){
+        const toggleLabel = document.createElement('label');
+        toggleLabel.className = 'sensible-toggle';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.id = `sensible-${v}`;
+        toggleLabel.appendChild(cb);
+        toggleLabel.appendChild(document.createTextNode('sensible'));
+        row.appendChild(toggleLabel);
+      } else {
+        row.appendChild(document.createElement('span'));
+      }
+
+      container.appendChild(row);
+    });
+  }
+  buildChordFields('chord1-fields', 'c1');
+  buildChordFields('chord2-fields', 'c2');
+
+  // ---------- Preset select ----------
+  const presetSelect = document.getElementById('preset');
+  PRESETS.forEach((p, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = p.name;
+    presetSelect.appendChild(opt);
+  });
+  presetSelect.addEventListener('change', () => {
+    const p = PRESETS[parseInt(presetSelect.value, 10)];
+    VOICES.forEach(v => {
+      document.getElementById(`c1-${v}`).value = p.c1[v] || '';
+      document.getElementById(`c2-${v}`).value = p.c2[v] || '';
+      document.getElementById(`sensible-${v}`).checked = !!p.sensible[v];
+    });
+    document.getElementById('results').style.display = 'none';
+  });
+
+  // ---------- ABC notation ----------
+  function buildAbc(notes1, notes2){
+    const p1 = {}, p2 = {};
+    VOICES.forEach(v => { p1[v] = toAbcPitch(notes1[v]); p2[v] = toAbcPitch(notes2[v]); });
+    return [
+      'X:1',
+      'M:4/4',
+      'L:1',
+      'K:C',
+      '%%score (S A) (T B)',
+      'V:S clef=treble name="S." stem=up',
+      'V:A clef=treble name="A." stem=down',
+      'V:T clef=bass name="T." stem=up',
+      'V:B clef=bass name="B." stem=down',
+      'V:S',
+      `${p1.S} | ${p2.S} |]`,
+      'V:A',
+      `${p1.A} | ${p2.A} |]`,
+      'V:T',
+      `${p1.T} | ${p2.T} |]`,
+      'V:B',
+      `${p1.B} | ${p2.B} |]`
+    ].join('\n');
+  }
+
+  // ---------- Piano keyboard (delegated to the reusable library) ----------
+  function drawPianoVertical(containerId, notes1, notes2){
+    // notes1/notes2 are { S, A, T, B } maps of note-name strings; the library
+    // parses them itself (same format: Do4/C4, Fa#3/F#3, ...).
+    return VoiceLeadingKeyboard.render(containerId, notes1, notes2, { colors: COLORS, voiceOrder: VOICES });
+  }
+
+  // ---------- Audio playback (abcjs synth) ----------
+  function attachAudio(audioContainerId, visualObj){
+    const audioDiv = document.getElementById(audioContainerId);
+    if (!audioDiv) return;
+    audioDiv.innerHTML = '';
+    const engine = (typeof ABCJS !== 'undefined') ? ABCJS : (typeof abcjs !== 'undefined' ? abcjs : null);
+    if (!engine || !engine.synth || !engine.synth.supportsAudio || !engine.synth.supportsAudio() || !visualObj){
+      audioDiv.innerHTML = '<span class="audio-note">Lecture audio indisponible dans ce navigateur.</span>';
+      return;
+    }
+    try {
+      const synthControl = new engine.synth.SynthController();
+      synthControl.load(`#${audioContainerId}`, null, {
+        displayLoop: false, displayRestart: true, displayPlay: true, displayProgress: false, displayWarp: false
+      });
+      synthControl.setTune(visualObj, false, { chordsOff: true }).catch(() => {
+        audioDiv.innerHTML = '<span class="audio-note">Lecture audio indisponible pour cet exemple.</span>';
+      });
+    } catch (e){
+      audioDiv.innerHTML = '<span class="audio-note">Lecture audio indisponible pour cet exemple.</span>';
+    }
+  }
+
+  // ---------- Verify ----------
+  function runVerification(){
+    const raw1 = {}, raw2 = {}, sensible = {};
+    VOICES.forEach(v => {
+      raw1[v] = document.getElementById(`c1-${v}`).value;
+      raw2[v] = document.getElementById(`c2-${v}`).value;
+      sensible[v] = document.getElementById(`sensible-${v}`).checked;
+    });
+
+    const resultsDiv = document.getElementById('results');
+    const list = document.getElementById('results-list');
+    list.innerHTML = '';
+    resultsDiv.style.display = 'block';
+    document.getElementById('notation').innerHTML = '';
+    document.getElementById('piano-vertical').innerHTML = '';
+
+    const notes1 = {}, notes2 = {};
+    let invalid = null;
+    VOICES.forEach(v => {
+      notes1[v] = parseNote(raw1[v]);
+      notes2[v] = parseNote(raw2[v]);
+      if (!notes1[v] || !notes2[v]) invalid = v;
+    });
+
+    if (invalid){
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="badge error">✕</span><span>Note invalide pour la voix ${NAMES[invalid]}. Vérifiez le format (ex. Do4, F#3).</span>`;
+      list.appendChild(li);
+      document.querySelector('.visuals').style.display = 'none';
+      return;
+    }
+    document.querySelector('.visuals').style.display = 'flex';
+
+    const midi1 = {}, midi2 = {};
+    VOICES.forEach(v => { midi1[v] = notes1[v].midi; midi2[v] = notes2[v].midi; });
+
+    const issues = analyze(midi1, midi2, sensible);
+
+    if (issues.length === 0){
+      const li = document.createElement('li');
+      li.style.border = 'none';
+      const msg = document.createElement('div');
+      msg.className = 'success-msg';
+      msg.textContent = "Aucune erreur de conduite des voix détectée. Bel enchaînement !";
+      li.appendChild(msg);
+      list.appendChild(li);
+    } else {
+      issues.forEach(issue => {
+        const li = document.createElement('li');
+        const badge = issue.type === 'error' ? '✕' : '!';
+        li.innerHTML = `<span class="badge ${issue.type}">${badge}</span><span>${issue.text}</span>`;
+        list.appendChild(li);
+      });
+    }
+
+    // Notation
+    try {
+      const abcString = buildAbc(notes1, notes2);
+      const engine = (typeof ABCJS !== 'undefined') ? ABCJS : (typeof abcjs !== 'undefined' ? abcjs : null);
+      let visualObj = null;
+      if (engine){
+        const rendered = engine.renderAbc('notation', abcString, { staffwidth: 480, paddingright: 12, paddingleft: 12, scale: 1.35, foregroundColor: '#2b2620' });
+        visualObj = rendered && rendered[0];
+      }
+      attachAudio('notation-audio', visualObj);
+    } catch (e){
+      document.getElementById('notation').textContent = "Impossible d'afficher la partition pour ces notes.";
+    }
+
+    // Piano
+    drawPianoVertical('piano-vertical', raw1, raw2);
+  }
+
+  document.getElementById('verify-btn').addEventListener('click', runVerification);
+
+  // ---------- Static illustrations for each rule ----------
+  function renderStaticExample(prefix, ex){
+    try {
+      const notesForAbc = {}, tmp2 = {};
+      VOICES.forEach(v => {
+        notesForAbc[v] = parseNote(ex.c1[v]);
+        tmp2[v] = parseNote(ex.c2[v]);
+      });
+      const abcString = buildAbc(notesForAbc, tmp2);
+      const engine = (typeof ABCJS !== 'undefined') ? ABCJS : (typeof abcjs !== 'undefined' ? abcjs : null);
+      let visualObj = null;
+      if (engine){
+        const rendered = engine.renderAbc(`${prefix}-notation`, abcString, { staffwidth: 420, paddingright: 8, paddingleft: 8, scale: 1.4, foregroundColor: '#2b2620' });
+        visualObj = rendered && rendered[0];
+      }
+      attachAudio(`${prefix}-audio`, visualObj);
+    } catch (e){
+      const n = document.getElementById(`${prefix}-notation`);
+      if (n) n.textContent = "Partition indisponible.";
+    }
+    drawPianoVertical(`${prefix}-piano`, ex.c1, ex.c2);
+  }
+
+  const RULE_EXAMPLES = {
+    rule1: { c1:{S:'D5',A:'G4',T:'B3',B:'G3'}, c2:{S:'E5',A:'A4',T:'B3',B:'F#3'} },
+    rule2: { c1:{S:'G4',A:'D4',T:'A#3',B:'D3'}, c2:{S:'D5',A:'D4',T:'A#3',B:'G3'} },
+    rule3: { c1:{S:'G4',A:'D4',T:'A#3',B:'D3'}, c2:{S:'F4',A:'A4',T:'A#3',B:'D3'} },
+    rule4: { c1:{S:'C5',A:'G4',T:'D4',B:'C3'}, c2:{S:'D5',A:'C#5',T:'D4',B:'C3'} },
+    rule5: { c1:{S:'G4',A:'C4',T:'G3',B:'C3'}, c2:{S:'D5',A:'A3',T:'E3',B:'A2'} },
+    rule6: { c1:{S:'C5',A:'G4',T:'B3',B:'G2'}, c2:{S:'C5',A:'G4',T:'C4',B:'C3'} },
+    rule7: { c1:{S:'C5',A:'G4',T:'E4',B:'C3'}, c2:{S:'B4',A:'G4',T:'D4',B:'G3'} }
+  };
+  Object.keys(RULE_EXAMPLES).forEach(key => renderStaticExample(key, RULE_EXAMPLES[key]));
+
+  // Auto-run the interactive tool once on load, with a default example loaded
+  const defaultPreset = PRESETS[1];
+  VOICES.forEach(v => {
+    document.getElementById(`c1-${v}`).value = defaultPreset.c1[v] || '';
+    document.getElementById(`c2-${v}`).value = defaultPreset.c2[v] || '';
+    document.getElementById(`sensible-${v}`).checked = !!defaultPreset.sensible[v];
+  });
+  presetSelect.value = 1;
+  runVerification();
+
+})();
+</script>
+
+</body>
+</html>
